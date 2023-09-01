@@ -102,7 +102,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const SizedBox(height: 24),
                       SizedBox(
                         width: MediaQuery.of(context).size.width - 48,
-                        height: (MediaQuery.of(context).size.width - 48) * 9 / 7,
+                        height: (MediaQuery.of(context).size.width - 48),
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
@@ -111,7 +111,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 scale: (MediaQuery.of(context).size.width - 48) / _cardSize,
                                 child: Container(
                                   width: _cardSize,
-                                  height: _cardSize * 9.0 / 7.0,
+                                  height: _cardSize,
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFF5F5F5),
@@ -125,8 +125,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         crossAxisAlignment: CrossAxisAlignment.end,
                                         children: [
                                           Container(
-                                            width: _cardSize * 0.35,
-                                            height: _cardSize * 0.45,
+                                            width: _cardSize * 0.4,
+                                            height: _cardSize * 0.4,
                                             decoration: BoxDecoration(
                                               borderRadius: BorderRadius.circular(4),
                                               color: Theme.of(context).colorScheme.secondary,
@@ -376,7 +376,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 borderRadius: 20,
                                 onTap: showCardInputBottomSheet,
                                 child: Container(
-                                  width: (MediaQuery.of(context).size.width - 48) * 0.8,
+                                  width: (MediaQuery.of(context).size.width - 48),
                                   padding: const EdgeInsets.all(24),
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -507,7 +507,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 crossAxisCount: 2,
                 mainAxisSpacing: 16,
                 crossAxisSpacing: 16,
-                mainAxisExtent: (MediaQuery.of(context).size.width - 64) * 9 / 14,
+                mainAxisExtent: (MediaQuery.of(context).size.width - 64) * 0.5,
               ),
               itemBuilder: (context, index) {
                 return CustomThemeButton(

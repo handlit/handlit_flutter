@@ -38,7 +38,7 @@ class _CardProfileDetailScreenState extends ConsumerState<CardProfileDetailScree
                       children: [
                         SizedBox(
                           width: MediaQuery.of(context).size.width - 48,
-                          height: (MediaQuery.of(context).size.width - 48) * 9 / 7,
+                          height: (MediaQuery.of(context).size.width - 48),
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
@@ -47,7 +47,7 @@ class _CardProfileDetailScreenState extends ConsumerState<CardProfileDetailScree
                                   scale: (MediaQuery.of(context).size.width - 48) / _cardSize,
                                   child: Container(
                                     width: _cardSize,
-                                    height: _cardSize * 9.0 / 7.0,
+                                    height: _cardSize,
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFF5F5F5),
@@ -61,8 +61,8 @@ class _CardProfileDetailScreenState extends ConsumerState<CardProfileDetailScree
                                           crossAxisAlignment: CrossAxisAlignment.end,
                                           children: [
                                             Container(
-                                              width: _cardSize * 0.35,
-                                              height: _cardSize * 0.45,
+                                              width: _cardSize * 0.4,
+                                              height: _cardSize * 0.4,
                                               decoration: BoxDecoration(
                                                 borderRadius: BorderRadius.circular(4),
                                                 color: Theme.of(context).colorScheme.secondary,
@@ -171,15 +171,15 @@ class _CardProfileDetailScreenState extends ConsumerState<CardProfileDetailScree
                         const Text('Mutual Friends', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                         const SizedBox(height: 24),
                         SizedBox(
-                          height: _cardSize * 0.45,
+                          height: _cardSize * 0.4,
                           child: ListView.separated(
                             physics: const ClampingScrollPhysics(),
                             scrollDirection: Axis.horizontal,
                             shrinkWrap: true,
                             itemBuilder: (context, index) {
                               return Container(
-                                width: _cardSize * 0.35,
-                                height: _cardSize * 0.45,
+                                width: _cardSize * 0.4,
+                                height: _cardSize * 0.4,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(4),
                                   color: Theme.of(context).colorScheme.secondary,
