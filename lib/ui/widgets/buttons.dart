@@ -118,6 +118,7 @@ class CustomBackButton extends ConsumerWidget {
 
 class CustomChipBox extends ConsumerWidget {
   const CustomChipBox({
+    super.key,
     required this.child,
     this.tintColor,
     this.gradient,
@@ -143,7 +144,7 @@ class CustomChipBox extends ConsumerWidget {
       child: Container(
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width - 48),
         decoration: BoxDecoration(
-          border: border ?? null,
+          border: border,
           borderRadius: borderRadius ?? BorderRadius.circular(10),
           color: tintColor ?? Theme.of(context).primaryColor.withOpacity(0.1),
           gradient: gradient,

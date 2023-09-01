@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class HandleitCustomHeader extends ConsumerWidget {
-  const HandleitCustomHeader({super.key, required this.title, this.actions, this.leading});
+  const HandleitCustomHeader({super.key, this.title, this.actions, this.leading});
   final Widget? leading;
-  final String title;
+  final String? title;
   final List<Widget>? actions;
 
   @override
@@ -18,7 +18,7 @@ class HandleitCustomHeader extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 24),
                   leading ?? const SizedBox.shrink(),
                   const SizedBox(width: 8),
                 ],
@@ -27,7 +27,7 @@ class HandleitCustomHeader extends ConsumerWidget {
           child: Container(
             margin: const EdgeInsets.fromLTRB(0, 16, 24, 16),
             child: Text(
-              title,
+              title ?? '',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
           ),

@@ -38,7 +38,7 @@ class BaseBottomSheetContainer extends ConsumerWidget {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(0, 16, 0, 8),
+                padding: const EdgeInsets.fromLTRB(0, 16, 0, 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

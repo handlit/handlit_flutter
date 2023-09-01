@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:handlit_flutter/utils/routes.dart';
+import 'package:handlit_flutter/utils/styles/theme_data.dart';
 
 void main() {
-  runApp(const HandlitApp());
+  runApp(const ProviderScope(child: HandlitApp()));
 }
 
-class HandlitApp extends StatelessWidget {
+class HandlitApp extends ConsumerWidget {
   const HandlitApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return MaterialApp.router(
       title: 'Handlit',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(),
+      routerConfig: ref.watch(goRouterStateProvider),
+      theme: CustomThemeData.lightMode,
     );
   }
 }

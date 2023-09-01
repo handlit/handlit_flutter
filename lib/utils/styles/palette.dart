@@ -9,7 +9,7 @@ class Palette {
   static const Color primaryTextColor = Color(0xFF212121);
   static const Color buttonBackgroundColor = Color(0xFFD9D9D9);
   static const Color backgroundColor = Color(0xFFFFFFFF);
-  static const Color scaffoldBackgroundColor = Color.fromARGB(255, 248, 248, 248);
+  static const Color scaffoldBackgroundColor = Color(0xFFFFFFFF);
   static const Color deActivatedTextColor = Color(0xFFb8b8b8);
   static const Color onErrorColor = Color(0xFFEE4F2F);
   static const Color errorColor = Color(0xFFEE4F2F);

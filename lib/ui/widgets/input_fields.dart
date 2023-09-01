@@ -66,7 +66,7 @@ class CustomBoxInputFields extends StatelessWidget {
     this.onEditingComplete,
     this.focusNode,
     this.errorStyle,
-    this.contentPadding = const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+    this.contentPadding = const EdgeInsets.symmetric(vertical: 24, horizontal: 12),
     this.isloading = false,
     this.readOnly = false,
     this.textInputAction,

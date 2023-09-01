@@ -68,6 +68,6 @@ class CustomThemeData {
       thickness: MaterialStateProperty.all(5.0),
       minThumbLength: 100,
     ),
-    appBarTheme: AppBarTheme(systemOverlayStyle: SystemUiOverlayStyle.dark),
+    appBarTheme: AppBarTheme(systemOverlayStyle: SystemUiOverlayStyle.dark, backgroundColor: Palette.backgroundColor),
   );
 }
