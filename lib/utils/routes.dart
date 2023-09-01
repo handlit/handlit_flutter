@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:handlit_flutter/ui/screens/authentication/telegram_auth_code_input_screen.dart';
-import 'package:handlit_flutter/ui/screens/authentication/telegram_phone_input_screen.dart';
 import 'package:handlit_flutter/ui/screens/screens.dart';
 
 enum HandleItRoutes {
@@ -15,6 +13,9 @@ enum HandleItRoutes {
   // authenticated
   layout,
   home,
+  qrScan,
+  cardProfileDetail,
+  friendRequestSent,
 }
 
 final goRouterStateProvider = StateProvider<GoRouter>(
@@ -45,6 +46,18 @@ final goRouterStateProvider = StateProvider<GoRouter>(
         GoRoute(
           path: '/${HandleItRoutes.home.name}',
           builder: (context, state) => const HomeScreen(),
+        ),
+        GoRoute(
+          path: '/${HandleItRoutes.cardProfileDetail.name}',
+          builder: (context, state) => const CardProfileDetailScreen(),
+        ),
+        GoRoute(
+          path: '/${HandleItRoutes.friendRequestSent.name}',
+          builder: (context, state) => const FriendRequestSentScreen(),
+        ),
+        GoRoute(
+          path: '/${HandleItRoutes.qrScan.name}',
+          builder: (context, state) => const QrScanScreen(),
         ),
       ],
       errorBuilder: (context, state) => const ErrorScreen(),
