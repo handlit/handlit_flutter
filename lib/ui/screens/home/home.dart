@@ -8,6 +8,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:handlit_flutter/controllers/exchanged_card.dart';
 import 'package:handlit_flutter/controllers/user_card.dart';
+import 'package:handlit_flutter/models/exchanged_card.dart';
 import 'package:handlit_flutter/repositories/api/exception/exception_wrapper.dart';
 import 'package:handlit_flutter/ui/widgets/custom_snackbar.dart';
 import 'package:handlit_flutter/ui/widgets/profile_card.dart';
@@ -24,6 +25,8 @@ final emailProvider = StateProvider<String?>((ref) => null);
 final companyNameProvider = StateProvider<String?>((ref) => null);
 final titleProvider = StateProvider<String?>((ref) => null);
 final selfDescriptionProvider = StateProvider<String?>((ref) => null);
+
+final selectedCardItemObjProvider = StateProvider<ExchangedCardItemObj?>((ref) => null);
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -429,10 +432,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text('Cards (${exchangedCardsObj?.list?.length ?? 0})', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 16)),
-                            Icon(
-                              Icons.keyboard_arrow_down_rounded,
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
-                            ),
+                            // Icon(
+                            //   Icons.keyboard_arrow_down_rounded,
+                            //   color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                            // ),
                           ],
                         ),
                       ).gestures(
@@ -490,6 +493,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           return CustomThemeButton(
                             backgroundColor: Theme.of(context).colorScheme.background,
                             onTap: () {
+                              ref.read(selectedCardItemObjProvider.notifier).state = exchangedCardsObj?.list?[index];
                               context.push('/${HandleItRoutes.cardProfileDetail.name}');
                             },
                             child: Padding(
