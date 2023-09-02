@@ -32,3 +32,10 @@ class CustomStackTrace implements StackTrace {
     return super.toString();
   }
 }
+
+class CustomException extends Object {
+  String? message;
+  String? code;
+  String? substring;
+  CustomException({required this.message, required this.code, required this.substring});
+}

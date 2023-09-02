@@ -6,6 +6,15 @@ part of 'user_auth_info.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+UserTokenObj _$UserTokenObjFromJson(Map<String, dynamic> json) => UserTokenObj(
+      userToken: json['userToken'] as String?,
+    );
+
+Map<String, dynamic> _$UserTokenObjToJson(UserTokenObj instance) =>
+    <String, dynamic>{
+      'userToken': instance.userToken,
+    };
+
 UserAuthInfoObj _$UserAuthInfoObjFromJson(Map<String, dynamic> json) =>
     UserAuthInfoObj(
       isAuth: json['isAuth'] as bool?,

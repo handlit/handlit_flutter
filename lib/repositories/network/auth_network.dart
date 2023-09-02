@@ -10,14 +10,17 @@ class AuthNetwork {
   final Ref ref;
   const AuthNetwork(this.ref);
 
-  Future<BaseResponseObject<UserAuthInfoObj>> submitWalletAddress(String walletAddress) async {
+  Future<BaseResponseObject<UserTokenObj>> submitWalletAddress(String walletAddress) async {
     // submit eth wallet address to server
-    return BaseResponseObject<UserAuthInfoObj>.fromJson(
-      await ref.read(apiProvider).requestPost(
-        APIUrl.WALLET,
-        {'walletAddress': walletAddress},
-      ),
-      (json) => UserAuthInfoObj.fromJson(json as Map<String, dynamic>),
+    final response = await ref.read(apiProvider).requestPost(
+      APIUrl.WALLET,
+      {'walletAddress': walletAddress},
+    );
+    print(response);
+
+    return BaseResponseObject<UserTokenObj>.fromJson(
+      response,
+      (json) => UserTokenObj.fromJson(json as Map<String, dynamic>),
     );
   }
 

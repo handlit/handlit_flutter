@@ -3,6 +3,15 @@ import 'package:json_annotation/json_annotation.dart';
 part 'user_auth_info.g.dart';
 
 @JsonSerializable()
+class UserTokenObj {
+  final String? userToken;
+  const UserTokenObj({this.userToken});
+
+  factory UserTokenObj.fromJson(Map<String, dynamic> json) => _$UserTokenObjFromJson(json);
+  Map<String, dynamic> toJson() => _$UserTokenObjToJson(this);
+}
+
+@JsonSerializable()
 class UserAuthInfoObj {
   final bool? isAuth;
   final UserObj? user;
