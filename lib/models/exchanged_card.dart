@@ -20,10 +20,11 @@ class ExchangedCardItemObj {
   final String? title;
   final String? description;
   final String? imageUrl;
+  final String? faceUrl;
   final String? qrCodeUrl;
   final bool? isMinted;
 
-  const ExchangedCardItemObj({this.id, this.name, this.email, this.company, this.title, this.description, this.imageUrl, this.qrCodeUrl, this.isMinted});
+  const ExchangedCardItemObj({this.id, this.name, this.email, this.company, this.title, this.description, this.imageUrl, this.qrCodeUrl, this.isMinted, this.faceUrl});
   factory ExchangedCardItemObj.fromJson(Map<String, dynamic> json) => _$ExchangedCardItemObjFromJson(json);
   Map<String, dynamic> toJson() => _$ExchangedCardItemObjToJson(this);
 }

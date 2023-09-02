@@ -25,7 +25,7 @@ class CustomSnackbar {
           borderRadius: BorderRadius.only(topLeft: Radius.circular(16.0), topRight: Radius.circular(16.0)),
         ),
         action: SnackBarAction(
-          textColor: Theme.of(context).primaryColor,
+          textColor: Theme.of(context).colorScheme.background,
           label: '확인',
           onPressed: () {},
         ),

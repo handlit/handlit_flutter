@@ -32,6 +32,7 @@ ExchangedCardItemObj _$ExchangedCardItemObjFromJson(
       imageUrl: json['imageUrl'] as String?,
       qrCodeUrl: json['qrCodeUrl'] as String?,
       isMinted: json['isMinted'] as bool?,
+      faceUrl: json['faceUrl'] as String?,
     );
 
 Map<String, dynamic> _$ExchangedCardItemObjToJson(
@@ -44,6 +45,7 @@ Map<String, dynamic> _$ExchangedCardItemObjToJson(
       'title': instance.title,
       'description': instance.description,
       'imageUrl': instance.imageUrl,
+      'faceUrl': instance.faceUrl,
       'qrCodeUrl': instance.qrCodeUrl,
       'isMinted': instance.isMinted,
     };

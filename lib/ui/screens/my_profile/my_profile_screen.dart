@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,8 +21,11 @@ class _MyProfileScreenState extends ConsumerState<MyProfileScreen> {
         margin: const EdgeInsets.symmetric(horizontal: 24),
         child: CustomThemeButton(
           onTap: () async {
-            (await ref.read(sharedPrefProvider)).clear();
-            Future(() => context.go('/'));
+            Future(() async {
+              (await ref.read(sharedPrefProvider)).clear();
+              Future.delayed(const Duration(milliseconds: 500));
+              context.go('/');
+            });
           },
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),

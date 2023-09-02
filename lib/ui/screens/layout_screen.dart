@@ -8,6 +8,8 @@ import 'package:handlit_flutter/ui/screens/screens.dart';
 import 'package:handlit_flutter/ui/widgets/widgets.dart';
 import 'package:styled_widget/styled_widget.dart';
 
+final qrScannedProvider = StateProvider<String?>((ref) => null);
+
 Map<HomeScreenState, Widget> _homeScreenMap = {
   HomeScreenState.home: const HomeScreen(),
   HomeScreenState.myProfile: const MyProfileScreen(),
@@ -48,7 +50,7 @@ class _LayoutScreenState extends ConsumerState<LayoutScreen> {
       bottomNavigationBar: BottomNavigationBar(
         onTap: (index) {
           if (index == 1) {
-            ref.read(scanQrProvider).showInputBottomSheet(context);
+            ref.read(scanQrProvider).scanQRCode(context).then((value) => ref.read(scanQrProvider).showInputBottomSheet(context));
           } else {
             ref.read(layoutScreenStateProvider.notifier).state = HomeScreenState.values[index];
           }
@@ -126,7 +128,7 @@ class _LayoutScreenState extends ConsumerState<LayoutScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${(userInfoData?.user?.accessHash ?? '').substring(0, 6)}...',
+                            '${(userInfoData?.user?.accessHash?.substring(0, 6)) ?? ''}...',
                             overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                   fontSize: 12,

@@ -13,7 +13,7 @@ class ExchangedCardNetwork {
   Future<BaseResponseObject<ExchangedCardListObj>> getExchangedCards() async {
     // submit eth wallet address to server
     final response = await ref.read(apiProvider).requestGet(
-          APIUrl.MY_CARDS,
+          APIUrl.EXCHANDED_CARDS,
           (await ref.read(sharedPrefProvider)).getString('x-user-token') ?? '',
         );
     return BaseResponseObject<ExchangedCardListObj>.fromJson(

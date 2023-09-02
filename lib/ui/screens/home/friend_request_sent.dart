@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:handlit_flutter/ui/widgets/widgets.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class FriendRequestSentScreen extends ConsumerStatefulWidget {
   const FriendRequestSentScreen({super.key});
@@ -39,8 +40,9 @@ class _FriendRequestSentScreenState extends ConsumerState<FriendRequestSentScree
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.background),
                   ),
                 ),
-                onTap: () {
+                onTap: () async {
                   context.pop();
+                  await launchUrl(Uri.parse('https://t.me'), mode: LaunchMode.externalApplication);
                 },
               ),
             ],

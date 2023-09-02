@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:handlit_flutter/ui/screens/barcode_scanner/barcode_scanner.dart';
 import 'package:handlit_flutter/ui/screens/screens.dart';
 
 enum HandleItRoutes {
@@ -16,6 +17,7 @@ enum HandleItRoutes {
   qrScan,
   cardProfileDetail,
   friendRequestSent,
+  barcodeScanner,
 }
 
 final goRouterStateProvider = StateProvider<GoRouter>(
@@ -59,6 +61,10 @@ final goRouterStateProvider = StateProvider<GoRouter>(
           path: '/${HandleItRoutes.qrScan.name}',
           builder: (context, state) => const QrScanScreen(),
         ),
+        GoRoute(
+          path: '/${HandleItRoutes.barcodeScanner.name}',
+          builder: (context, state) => const BarcodeScannerScreen(),
+        )
       ],
       errorBuilder: (context, state) => const ErrorScreen(),
     );
