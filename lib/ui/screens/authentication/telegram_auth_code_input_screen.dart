@@ -1,7 +1,13 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:handlit_flutter/controllers/otp_code.dart';
+import 'package:handlit_flutter/repositories/api/exception/exception_wrapper.dart';
+import 'package:handlit_flutter/repositories/network/auth_network.dart';
+import 'package:handlit_flutter/ui/screens/screens.dart';
 import 'package:handlit_flutter/ui/widgets/auth_number_pad.dart';
 import 'package:handlit_flutter/ui/widgets/buttons.dart';
 import 'package:handlit_flutter/ui/widgets/headers.dart';
@@ -30,8 +36,35 @@ class _TelegramAuthCodeInputScreenState extends ConsumerState<TelegramAuthCodeIn
     _countryFocusNode = FocusNode();
     _phoneFocusNode = FocusNode();
     Future(
-      () {},
+      () {
+        ref.read(authCodeStateProvider.notifier).state = [];
+      },
     );
+  }
+
+  Future<void> _resendCode(context) async {
+    await ref.read(authNetworkProvider).submitPhoneNumber(ref.read(phoneNumberStateProvider) ?? '').whenComplete(
+          () => showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                backgroundColor: Theme.of(context).colorScheme.background,
+                title: Text('Code sent!', style: TextStyle(color: Theme.of(context).colorScheme.onSecondaryContainer)),
+                content: const Text('We’ve sent code to your telegram account.\nPlease enter the code below.'),
+                actions: [
+                  CustomChipBox(
+                    tintColor: Theme.of(context).colorScheme.onSecondaryContainer,
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Text(
+                      'OK',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.background),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
   }
 
   @override
@@ -44,10 +77,32 @@ class _TelegramAuthCodeInputScreenState extends ConsumerState<TelegramAuthCodeIn
   }
 
   Future<void> _authVerificationCode() async {
-    // TODO: Send verification code
-    context.go('/${HandleItRoutes.layout.name}');
-    context.push('/${HandleItRoutes.verified.name}');
-    ref.read(authCodeStateProvider.notifier).state = [];
+    await ref.read(otpCodeAsyncController.notifier).submitOTP(ref.read(authCodeStateProvider).join(""));
+    if (ref.read(otpCodeAsyncController).hasError) {
+      ref.read(authCodeStateProvider.notifier).state = [];
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Theme.of(context).colorScheme.background,
+          title: Text('Something went wrong!', style: TextStyle(color: Theme.of(context).colorScheme.onSecondaryContainer)),
+          content: Text((ref.read(otpCodeAsyncController).error as CustomException).message ?? ''),
+          actions: [
+            CustomChipBox(
+              tintColor: Theme.of(context).colorScheme.onSecondaryContainer,
+              onTap: () => Navigator.of(context).pop(),
+              child: Text(
+                'OK',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.background),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      context.go('/${HandleItRoutes.layout.name}');
+      context.push('/${HandleItRoutes.verified.name}');
+      ref.read(authCodeStateProvider.notifier).state = [];
+    }
   }
 
   @override
@@ -72,29 +127,33 @@ class _TelegramAuthCodeInputScreenState extends ConsumerState<TelegramAuthCodeIn
                     const SizedBox(height: 24),
                     AutoSizeText(
                       //TODO : Change to real phone number
-                      'We’ve sent an SMS with an activation code\nto your phone +82 1051443347',
+                      'We’ve sent code to your telegram account.\nPlease enter the code below.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                     ),
                     const Spacer(),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 36),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ...ref.watch(authCodeStateProvider).map((e) {
-                            return NumberPadItem(number: e);
-                          }).toList(),
-                          ...List.generate(5 - ref.watch(authCodeStateProvider).length, (index) => const NumberPadItem(number: null)),
-                        ],
-                      ),
-                    ),
+                    ref.watch(otpCodeAsyncController).isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 36),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ...ref.watch(authCodeStateProvider).map((e) {
+                                  return NumberPadItem(number: e);
+                                }).toList(),
+                                ...List.generate(5 - ref.watch(authCodeStateProvider).length, (index) => const NumberPadItem(number: null)),
+                              ],
+                            ),
+                          ),
                     const SizedBox(height: 8),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        _resendCode(context);
+                      },
                       child: Text(
                         'Didn’t get the code?',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -104,7 +163,8 @@ class _TelegramAuthCodeInputScreenState extends ConsumerState<TelegramAuthCodeIn
                     ),
                     const Spacer(),
                     NumPad(
-                      onTap: (int value) {
+                      isDisabled: ref.watch(otpCodeAsyncController).isLoading,
+                      onTap: (int value) async {
                         if (value == 99 && ref.read(authCodeStateProvider).isNotEmpty) {
                           ref.read(authCodeStateProvider.notifier).state = [...ref.read(authCodeStateProvider).sublist(0, ref.read(authCodeStateProvider).length - 1)];
                           return;
@@ -113,7 +173,7 @@ class _TelegramAuthCodeInputScreenState extends ConsumerState<TelegramAuthCodeIn
                         }
                         ref.read(authCodeStateProvider.notifier).state = [...ref.read(authCodeStateProvider), value];
                         if (ref.read(authCodeStateProvider).length == 5) {
-                          _authVerificationCode();
+                          await _authVerificationCode();
                         }
                       },
                     ),

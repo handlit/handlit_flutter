@@ -41,7 +41,7 @@ final goRouterStateProvider = StateProvider<GoRouter>(
         ),
         GoRoute(
           path: '/${HandleItRoutes.layout.name}',
-          builder: (context, state) => const LayoutScreen(),
+          pageBuilder: (context, state) => RouteTransition.withoutAnimationTransition(const LayoutScreen()),
         ),
         GoRoute(
           path: '/${HandleItRoutes.home.name}',

@@ -40,21 +40,20 @@ class AuthNetwork {
     return BaseResponseObject.fromJson(
       await ref.read(apiProvider).requestPost(
             APIUrl.TELEGRAM_SEND_CODE,
-            {'phoneNumber': phoneNuber},
+            {'phone': phoneNuber},
             (await ref.read(sharedPrefProvider)).getString('x-user-token') ?? '',
           ),
       (json) => json as Map<String, dynamic>,
     );
   }
 
-  // Future<BaseResponseObject> submitOTP(String authCode) async {
-  //   // submit OTP to server
-  //   return BaseResponseObject.fromJson(
-  //       await ref.read(apiProvider).requestPost(
-  //             APIUrl.TELEGRAM_SEND_CODE,
-  //             {'phoneNumber': authCode},
-  //             (await ref.read(sharedPrefProvider)).getString('x-user-token') ?? '',
-  //           ),
-  //       (json) => null);
-  // }
+  Future<BaseResponseObject> submitOTP(String authCode) async {
+    final response = await ref.read(apiProvider).requestPost(
+          APIUrl.TELEGRAM_SIGN_IN,
+          {'code': authCode},
+          (await ref.read(sharedPrefProvider)).getString('x-user-token') ?? '',
+        );
+    // submit OTP to server
+    return BaseResponseObject.fromJson(response, (json) => null);
+  }
 }

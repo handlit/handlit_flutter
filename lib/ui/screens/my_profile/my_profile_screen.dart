@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:handlit_flutter/repositories/local_pref.dart';
 import 'package:handlit_flutter/ui/widgets/widgets.dart';
 
 class MyProfileScreen extends ConsumerStatefulWidget {
@@ -17,8 +18,9 @@ class _MyProfileScreenState extends ConsumerState<MyProfileScreen> {
       body: Container(
         margin: const EdgeInsets.symmetric(horizontal: 24),
         child: CustomThemeButton(
-          onTap: () {
+          onTap: () async {
             context.go('/');
+            (await ref.read(sharedPrefProvider)).clear();
           },
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:handlit_flutter/repositories/network/auth_network.dart';
 import 'package:handlit_flutter/ui/widgets/widgets.dart';
 import 'package:handlit_flutter/utils/data/country_code.dart';
 import 'package:handlit_flutter/utils/routes.dart';
@@ -8,6 +9,7 @@ import 'package:keyboard_attachable/keyboard_attachable.dart';
 import 'package:recase/recase.dart';
 
 final countryCodeStateProvider = StateProvider<Map<String, String>?>((ref) => null);
+final phoneNumberStateProvider = StateProvider<String?>((ref) => null);
 
 class TelegramPhoneInputScreen extends ConsumerStatefulWidget {
   const TelegramPhoneInputScreen({super.key});
@@ -64,10 +66,11 @@ class _TelegramPhoneInputScreenState extends ConsumerState<TelegramPhoneInputScr
   }
 
   Future<void> _sendVerificationCode() async {
-    // TODO: Send verification code
-    final countryCode = ref.watch(countryCodeStateProvider);
-    final phone = _phoneEditingController.text;
-    context.push('/${HandleItRoutes.telegramAuthCodeInput.name}');
+    print(_phoneEditingController.text);
+    ref.read(phoneNumberStateProvider.notifier).state = ((ref.watch(countryCodeStateProvider)?['dial_code'] ?? '') + _phoneEditingController.text).replaceAll('+', '');
+    await ref.read(authNetworkProvider).submitPhoneNumber(ref.read(phoneNumberStateProvider) ?? '').whenComplete(
+          () => context.push('/${HandleItRoutes.telegramAuthCodeInput.name}'),
+        );
   }
 
   @override

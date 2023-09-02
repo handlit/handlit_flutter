@@ -9,6 +9,9 @@ class CustomThemeData {
     useMaterial3: true,
     primaryColor: Palette.primaryColor,
     backgroundColor: Colors.white,
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: Palette.secondaryContainerColor,
+    ),
     scaffoldBackgroundColor: Palette.scaffoldBackgroundColor,
     canvasColor: Palette.backgroundColor,
     disabledColor: Palette.deActivatedTextColor,

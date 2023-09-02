@@ -4,6 +4,7 @@ class NumPad extends StatelessWidget {
   const NumPad({
     Key? key,
     required this.onTap,
+    this.isDisabled,
     this.mainAxisSpacing,
     this.crossAxisSpacing,
     this.clearIcon,
@@ -25,6 +26,7 @@ class NumPad extends StatelessWidget {
   final double? buttonSize;
   final Color? backgroundColor;
   final double? iconSize;
+  final bool? isDisabled;
 
   @override
   Widget build(BuildContext context) {
@@ -35,30 +37,33 @@ class NumPad extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 12),
-      child: GridView.count(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: mainAxisSpacing ?? mSpacing,
-        crossAxisSpacing: crossAxisSpacing ?? cSpacing,
-        childAspectRatio: 1.5,
-        crossAxisCount: 3,
-        children: [
-          ...List.generate(
-            values.length,
-            (index) => numItem(value: values[index], onTap: onTap),
-          ),
-          const SizedBox(),
-          numItem(value: 0, onTap: onTap),
-          numItem(
-            value: 99,
-            onTap: onTap,
-            widget: Icon(
-              Icons.backspace_outlined,
-              size: iconSize ?? 30,
-              color: themeColor ?? Colors.blueGrey,
+      child: Opacity(
+        opacity: isDisabled ?? false ? 0.5 : 1,
+        child: GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: mainAxisSpacing ?? mSpacing,
+          crossAxisSpacing: crossAxisSpacing ?? cSpacing,
+          childAspectRatio: 1.5,
+          crossAxisCount: 3,
+          children: [
+            ...List.generate(
+              values.length,
+              (index) => numItem(value: values[index], onTap: onTap),
             ),
-          ),
-        ],
+            const SizedBox(),
+            numItem(value: 0, onTap: onTap),
+            numItem(
+              value: 99,
+              onTap: (isDisabled ?? false) ? () {} : onTap,
+              widget: Icon(
+                Icons.backspace_outlined,
+                size: iconSize ?? 30,
+                color: themeColor ?? Colors.blueGrey,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
