@@ -218,7 +218,13 @@ class _CardProfileDetailScreenState extends ConsumerState<CardProfileDetailScree
                         const SizedBox(height: 24),
                         const Text('Self description', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                         const SizedBox(height: 8),
-                        const CustomChipBox(child: Text('I am a s', maxLines: 2, overflow: TextOverflow.ellipsis)),
+                        const CustomChipBox(
+                          child: Text(
+                            'I am a s',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                   ),

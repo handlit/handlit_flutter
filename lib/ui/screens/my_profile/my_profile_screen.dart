@@ -19,8 +19,8 @@ class _MyProfileScreenState extends ConsumerState<MyProfileScreen> {
         margin: const EdgeInsets.symmetric(horizontal: 24),
         child: CustomThemeButton(
           onTap: () async {
-            context.go('/');
             (await ref.read(sharedPrefProvider)).clear();
+            Future(() => context.go('/'));
           },
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),

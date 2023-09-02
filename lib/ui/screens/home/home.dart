@@ -1,14 +1,26 @@
-import 'package:auto_size_text/auto_size_text.dart';
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:handlit_flutter/controllers/exchanged_card.dart';
+import 'package:handlit_flutter/controllers/user_card.dart';
+import 'package:handlit_flutter/repositories/api/exception/exception_wrapper.dart';
+import 'package:handlit_flutter/ui/widgets/custom_snackbar.dart';
+import 'package:handlit_flutter/ui/widgets/profile_card.dart';
 import 'package:handlit_flutter/ui/widgets/widgets.dart';
 import 'package:handlit_flutter/utils/routes.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:styled_widget/styled_widget.dart';
+import 'package:widgets_to_image/widgets_to_image.dart';
 
 final nameProvider = StateProvider<String?>((ref) => null);
+final emailProvider = StateProvider<String?>((ref) => null);
+final companyNameProvider = StateProvider<String?>((ref) => null);
+final titleProvider = StateProvider<String?>((ref) => null);
+final selfDescriptionProvider = StateProvider<String?>((ref) => null);
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -18,7 +30,11 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  Uint8List? bytes;
+  late final WidgetsToImageController _widgetsToImageController = WidgetsToImageController();
+
   late ScrollController _scrollController;
+
   late TextEditingController _nameEditingController;
   late TextEditingController _emailEditingController;
   late TextEditingController _companyNameEditingController;
@@ -26,22 +42,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   late TextEditingController _selfDescriptionEditingController;
   late FocusNode _nameFocusNode;
   late FocusNode _emailFocusNode;
+  late FocusNode _companyNameFocusNode;
+  late FocusNode _titleFocusNode;
+  late FocusNode _selfDescriptionFocusNode;
 
-  late final double _cardSize = 350;
+  bool _canMint() {
+    return ref.watch(editedProfileImageProvider) != null &&
+        ref.watch(nameProvider) != null &&
+        ref.watch(emailProvider) != null &&
+        ref.watch(companyNameProvider) != null &&
+        ref.watch(titleProvider) != null;
+  }
+
+  Future<void> _capture() async {
+    final capturedBytes = await _widgetsToImageController.capture();
+    final tempDir = await getTemporaryDirectory();
+    File file = await File('${tempDir.path}/image.png').create();
+    file.writeAsBytesSync(capturedBytes!);
+    ref.read(capturedImageProvider.notifier).state = file;
+  }
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+
     _nameEditingController = TextEditingController();
     _emailEditingController = TextEditingController();
     _companyNameEditingController = TextEditingController();
     _titleEditingController = TextEditingController();
     _selfDescriptionEditingController = TextEditingController();
+
     _nameFocusNode = FocusNode();
     _emailFocusNode = FocusNode();
+    _companyNameFocusNode = FocusNode();
+    _titleFocusNode = FocusNode();
+    _selfDescriptionFocusNode = FocusNode();
 
     Future(() {
+      ref.read(userCardListAsyncController.notifier).getUserCardList();
+      ref.read(exchangedCardAsyncController.notifier).getExchangedCards();
       _nameFocusNode.requestFocus();
       setState(() {});
     });
@@ -51,6 +91,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void dispose() {
     super.dispose();
     _scrollController.dispose();
+
     _nameEditingController.dispose();
     _emailEditingController.dispose();
     _companyNameEditingController.dispose();
@@ -59,9 +100,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     _nameFocusNode.dispose();
     _emailFocusNode.dispose();
+    _companyNameFocusNode.dispose();
+    _titleFocusNode.dispose();
+    _selfDescriptionFocusNode.dispose();
   }
 
-  Future<void> createNewCard() async {}
+  Future<void> createNewCard() async {
+    FocusScope.of(context).unfocus();
+    await _capture();
+    ref.watch(editedProfileImageProvider)!;
+    ref.watch(capturedImageProvider)!;
+
+    await ref.read(userCardListAsyncController.notifier).mintUserCard({
+      "name": ref.read(nameProvider),
+      "email": ref.read(emailProvider),
+      "company": ref.read(companyNameProvider),
+      "title": ref.read(titleProvider),
+      "description": ref.read(selfDescriptionProvider),
+    }, [
+      ref.read(editedProfileImageProvider)!,
+      ref.read(capturedImageProvider)!
+    ]).whenComplete(() {
+      if (ref.read(userCardListAsyncController).hasError) {
+        print('error;;;;;;;;;;;');
+        final exception = ref.read(userCardListAsyncController).error as CustomException;
+        CustomSnackbar.show(context, exception.message ?? '');
+      } else {
+        print('pop;;;;;;;;;;;');
+        context.pop();
+      }
+    });
+  }
 
   void showCardInputBottomSheet() {
     showModalBottomSheet(
@@ -71,248 +140,157 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       isScrollControlled: true,
       isDismissible: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(builder: (context, setState) {
-        return SizedBox(
-          width: double.infinity,
-          height: MediaQuery.of(context).size.height * 0.95,
-          child: BaseBottomSheetContainer(
-            title: 'Create New Card',
-            action: Container(
-              margin: const EdgeInsets.only(right: 24),
-              child: CustomChipBox(
-                tintColor: Theme.of(context).colorScheme.onSecondaryContainer,
-                onTap: () {},
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Text(
-                    'MINT',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 14, color: Theme.of(context).colorScheme.background),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return SizedBox(
+            width: double.infinity,
+            height: MediaQuery.of(context).size.height * 0.95,
+            child: BaseBottomSheetContainer(
+              title: 'Create New Card',
+              action: Container(
+                margin: const EdgeInsets.only(right: 24),
+                child: CustomChipBox(
+                  tintColor: _canMint() ? Theme.of(context).colorScheme.onSecondaryContainer : Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                  onTap: createNewCard,
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Text(
+                      'MINT',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 14, color: Theme.of(context).colorScheme.background),
+                    ),
+                  ),
+                ),
+              ),
+              child: SafeArea(
+                child: SizedBox(
+                  width: double.infinity,
+                  height: double.infinity,
+                  child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 24),
+                        WidgetsToImage(
+                            controller: _widgetsToImageController,
+                            child: ProfileCardContainer(
+                              nameFocusNode: _nameFocusNode,
+                              emailFocusNode: _emailFocusNode,
+                              companyNameFocusNode: _companyNameFocusNode,
+                              titleFocusNode: _titleFocusNode,
+                              selfDescriptionFocusNode: _selfDescriptionFocusNode,
+                              unFocusTapped: () {
+                                FocusScope.of(context).unfocus();
+                                setState(() {});
+                              },
+                            ).gestures(
+                              onTap: () {
+                                FocusScope.of(context).unfocus();
+                              },
+                            )),
+                        Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Name *', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 16)),
+                              const SizedBox(height: 8),
+                              CustomBoxInputFields(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                                controller: _nameEditingController,
+                                focusNode: _nameFocusNode,
+                                placeholder: 'John Doe',
+                                onTap: () {
+                                  _nameFocusNode.requestFocus();
+                                  setState(() {});
+                                },
+                                onChanged: (p0) {
+                                  ref.read(nameProvider.notifier).state = p0;
+                                  setState(() {});
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              Text('E-mail *', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 16)),
+                              const SizedBox(height: 8),
+                              CustomBoxInputFields(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                                controller: _emailEditingController,
+                                focusNode: _emailFocusNode,
+                                placeholder: 'ethconSeoul@handlit.com',
+                                onTap: () {
+                                  _emailFocusNode.requestFocus();
+                                  setState(() {});
+                                },
+                                onChanged: (p0) {
+                                  ref.read(emailProvider.notifier).state = p0;
+                                  setState(() {});
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              Text('Company *', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 16)),
+                              const SizedBox(height: 8),
+                              CustomBoxInputFields(
+                                focusNode: _companyNameFocusNode,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                                controller: _companyNameEditingController,
+                                placeholder: 'Handleit corp.',
+                                onTap: () {
+                                  _companyNameFocusNode.requestFocus();
+                                  setState(() {});
+                                },
+                                onChanged: (p0) {
+                                  ref.read(companyNameProvider.notifier).state = p0;
+                                  setState(() {});
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              Text('Title *', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 16)),
+                              const SizedBox(height: 8),
+                              CustomBoxInputFields(
+                                focusNode: _titleFocusNode,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                                controller: _titleEditingController,
+                                placeholder: 'Software Engineer',
+                                onTap: () {
+                                  _titleFocusNode.requestFocus();
+                                  setState(() {});
+                                },
+                                onChanged: (p0) {
+                                  ref.read(titleProvider.notifier).state = p0;
+                                  setState(() {});
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              Text('Self description *', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 16)),
+                              const SizedBox(height: 8),
+                              CustomBoxInputFields(
+                                focusNode: _selfDescriptionFocusNode,
+                                textHeight: 1.2,
+                                minLine: 2,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                                controller: _selfDescriptionEditingController,
+                                placeholder: 'Hi there! I am an app developer at Handleit corp. 👋',
+                                onTap: () {
+                                  _selfDescriptionFocusNode.requestFocus();
+                                  setState(() {});
+                                },
+                                onChanged: (p0) {
+                                  ref.read(selfDescriptionProvider.notifier).state = p0;
+                                  setState(() {});
+                                },
+                              ),
+                              const SizedBox(height: 24),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-            child: SafeArea(
-              child: SizedBox(
-                width: double.infinity,
-                height: double.infinity,
-                child: SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width - 48,
-                        height: (MediaQuery.of(context).size.width - 48),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Builder(builder: (context) {
-                              return Transform.scale(
-                                scale: (MediaQuery.of(context).size.width - 48) / _cardSize,
-                                child: Container(
-                                  width: _cardSize,
-                                  height: _cardSize,
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF5F5F5),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: [
-                                          Container(
-                                            width: _cardSize * 0.4,
-                                            height: _cardSize * 0.4,
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(4),
-                                              color: Theme.of(context).colorScheme.secondary,
-                                            ),
-                                            child: ClipRRect(
-                                              borderRadius: BorderRadius.circular(4),
-                                              child: CachedNetworkImage(
-                                                imageUrl: 'https://picsum.photos/id/237/200',
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(left: 16),
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  // CustomChipBox(
-                                                  //   child: Text('Going to ETH CC'),
-                                                  // ),
-                                                  // const SizedBox(height: 12),
-                                                  // CustomChipBox(
-                                                  //   child: Text('Based in 🇰🇷'),
-                                                  // ),
-                                                  // const SizedBox(height: 12),
-                                                  InkWell(
-                                                    onTap: () {
-                                                      _nameFocusNode.requestFocus();
-                                                    },
-                                                    child: Container(
-                                                      width: double.infinity,
-                                                      decoration: BoxDecoration(
-                                                        border: Border.all(
-                                                          //dotted border
-                                                          width: 1,
-                                                          color: _nameFocusNode.hasFocus ? Theme.of(context).colorScheme.secondary : Colors.transparent,
-                                                          style: BorderStyle.solid,
-                                                        ),
-                                                        borderRadius: BorderRadius.circular(4),
-                                                      ),
-                                                      child: AutoSizeText(
-                                                        ref.watch(nameProvider) ?? '',
-                                                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 22),
-                                                        maxLines: 3,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        'Community Manager',
-                                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 16),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Developer relation',
-                                        style:
-                                            Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14, fontWeight: FontWeight.w400, color: Theme.of(context).colorScheme.primary.withOpacity(0.5)),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        'Contact',
-                                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 16),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          Icon(Icons.email, size: 20, color: Theme.of(context).colorScheme.primary),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'qlqjsdmsz8@gmail.com',
-                                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14, fontWeight: FontWeight.w400),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          FaIcon(FontAwesomeIcons.telegram, size: 20, color: Theme.of(context).colorScheme.primary),
-                                          const SizedBox(width: 4),
-                                          const Text('@swdoo'),
-                                          // FaIcon(FontAwesomeIcons.linkedin, size: 20, color: Theme.of(context).colorScheme.primary),
-                                          // const SizedBox(width: 4),
-                                          // FaIcon(FontAwesomeIcons.twitter, size: 20, color: Theme.of(context).colorScheme.primary),
-                                          // const SizedBox(width: 4),
-                                          // FaIcon(FontAwesomeIcons.github, size: 20, color: Theme.of(context).colorScheme.primary),
-                                          // const SizedBox(width: 4),
-                                          // FaIcon(FontAwesomeIcons.facebook, size: 20, color: Theme.of(context).colorScheme.primary),
-                                          // const SizedBox(width: 4),
-                                          // FaIcon(FontAwesomeIcons.instagram, size: 20, color: Theme.of(context).colorScheme.primary),
-                                          // const SizedBox(width: 4),
-                                          // FaIcon(FontAwesomeIcons.youtube, size: 20, color: Theme.of(context).colorScheme.primary),
-                                          // const SizedBox(width: 4),
-                                          // FaIcon(FontAwesomeIcons.medium, size: 20, color: Theme.of(context).colorScheme.primary),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ).elevation(4, borderRadius: BorderRadius.circular(10)),
-                              );
-                            }),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Name *', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 16)),
-                            const SizedBox(height: 8),
-                            CustomBoxInputFields(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                              controller: _nameEditingController,
-                              focusNode: _nameFocusNode,
-                              placeholder: 'John Doe',
-                              onTap: () {
-                                _nameFocusNode.requestFocus();
-                                setState(() {});
-                              },
-                              onChanged: (p0) {
-                                ref.read(nameProvider.notifier).state = p0;
-                                setState(() {});
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            Text('E-mail *', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 16)),
-                            const SizedBox(height: 8),
-                            CustomBoxInputFields(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                              controller: _emailEditingController,
-                              focusNode: _emailFocusNode,
-                              placeholder: 'ethconSeoul@handleit.com',
-                              onTap: () {
-                                setState(() {});
-                              },
-                              onChanged: (p0) {},
-                            ),
-                            const SizedBox(height: 16),
-                            Text('Company *', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 16)),
-                            const SizedBox(height: 8),
-                            CustomBoxInputFields(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                              controller: _companyNameEditingController,
-                              placeholder: 'Handleit corp.',
-                              onTap: () {
-                                setState(() {});
-                              },
-                              onChanged: (p0) => setState(() {}),
-                            ),
-                            const SizedBox(height: 16),
-                            Text('Title *', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 16)),
-                            const SizedBox(height: 8),
-                            CustomBoxInputFields(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                              controller: _titleEditingController,
-                              placeholder: 'Community manager',
-                              onChanged: (p0) => setState(() {}),
-                            ),
-                            const SizedBox(height: 16),
-                            Text('Self description', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 16)),
-                            const SizedBox(height: 8),
-                            CustomBoxInputFields(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                              controller: _selfDescriptionEditingController,
-                              placeholder: 'Hi there, I am a developer at Handle It.',
-                              onChanged: (p0) => setState(() {}),
-                            ),
-                            const SizedBox(height: 24),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }),
+          );
+        },
+      ),
     );
   }
 
@@ -333,88 +311,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // ListView.separated(
-                      //   scrollDirection: Axis.horizontal,
-                      //   physics: const ClampingScrollPhysics(),
-                      //   padding: const EdgeInsets.fromLTRB(24, 24, 0, 24),
-                      //   itemBuilder: (context, index) {
-                      //     if (index == 2) {
-                      //       return Container(
-                      //         width: MediaQuery.of(context).size.width * 0.15,
-                      //         padding: const EdgeInsets.all(24),
-                      //         decoration: BoxDecoration(
-                      //           color: Theme.of(context).colorScheme.secondary,
-                      //           borderRadius: BorderRadius.only(
-                      //             topLeft: Radius.circular(20),
-                      //             bottomLeft: Radius.circular(20),
-                      //           ),
-                      //         ),
-                      //       );
-                      //     } else {
-                      //       return Container(
-                      //         width: MediaQuery.of(context).size.width * 0.7,
-                      //         padding: const EdgeInsets.all(24),
-                      //         decoration: BoxDecoration(
-                      //           color: Theme.of(context).colorScheme.secondary,
-                      //           borderRadius: BorderRadius.circular(20),
-                      //         ),
-                      //       );
-                      //     }
-                      //   },
-                      //   itemCount: 3,
-                      //   separatorBuilder: (BuildContext context, int index) {
-                      //     return const SizedBox(width: 24);
-                      //   },
-                      // ),
-                      Column(
-                        children: [
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.all(24),
-                              child: CustomThemeButton(
-                                backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-                                borderRadius: 20,
-                                onTap: showCardInputBottomSheet,
-                                child: Container(
-                                  width: (MediaQuery.of(context).size.width - 48),
-                                  padding: const EdgeInsets.all(24),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Container(
-                                        width: 48,
-                                        height: 48,
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context).colorScheme.secondary,
-                                          borderRadius: BorderRadius.circular(30),
-                                        ),
-                                        child: Icon(Icons.add, color: Theme.of(context).colorScheme.background, size: 24),
-                                      ).elevation(
-                                        4,
-                                        borderRadius: BorderRadius.circular(30),
-                                        shadowColor: Theme.of(context).colorScheme.secondary,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        'Create My Card',
-                                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                              fontSize: 18,
-                                              color: Theme.of(context).colorScheme.primary,
-                                            ),
-                                      ),
-                                    ],
+                      ref.watch(userCardListAsyncController).when(
+                        loading: () {
+                          return const Center(child: CircularProgressIndicator());
+                        },
+                        data: (cardListObj) {
+                          if (cardListObj == null || (cardListObj.list?.isEmpty ?? true)) {
+                            return _CreateCardButton(onTap: showCardInputBottomSheet);
+                          } else {
+                            return CachedNetworkImage(imageUrl: cardListObj.list?[0].imageUrl ?? '');
+                          }
+                        },
+                        error: (Object error, StackTrace stackTrace) {
+                          return SizedBox(
+                            width: double.infinity,
+                            height: 80,
+                            child: Center(
+                              child: Column(
+                                children: [
+                                  const Text('Something went wrong!'),
+                                  const SizedBox(height: 12),
+                                  CustomChipBox(
+                                    child: const Text('REFRESH'),
+                                    onTap: () => ref.read(userCardListAsyncController.notifier).getUserCardList(),
                                   ),
-                                ),
+                                ],
                               ),
                             ),
-                          ),
-                        ],
+                          );
+                        },
                       ),
                     ],
                   ),
                 ),
                 Opacity(
-                  opacity: 0.3,
+                  opacity: ref.watch(userCardListAsyncController).isLoading || (ref.watch(userCardListAsyncController).value?.list?.isEmpty ?? true) ? 0.2 : 1,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     width: double.infinity,
@@ -424,24 +355,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         _CardActionButton(
                           iconWidget: const Icon(Icons.download),
                           label: 'Download',
-                          onTap: () {},
+                          onTap: ref.watch(userCardListAsyncController).isLoading || (ref.watch(userCardListAsyncController).value?.list?.isEmpty ?? true) ? null : () {},
                         ),
                         _CardActionButton(
                           iconWidget: const Icon(Icons.qr_code),
                           label: 'QR Code',
-                          onTap: () {
-                            context.push('/${HandleItRoutes.qrScan.name}');
-                          },
+                          onTap: ref.watch(userCardListAsyncController).isLoading || (ref.watch(userCardListAsyncController).value?.list?.isEmpty ?? true)
+                              ? null
+                              : () {
+                                  context.push('/${HandleItRoutes.qrScan.name}');
+                                },
                         ),
                         _CardActionButton(
                           iconWidget: const Icon(Icons.ios_share),
                           label: 'Share',
-                          onTap: () {},
+                          onTap: ref.watch(userCardListAsyncController).isLoading || (ref.watch(userCardListAsyncController).value?.list?.isEmpty ?? true) ? null : () {},
                         ),
                         _CardActionButton(
                           iconWidget: const FaIcon(FontAwesomeIcons.telegram),
                           label: 'Telegram',
-                          onTap: () {},
+                          onTap: ref.watch(userCardListAsyncController).isLoading || (ref.watch(userCardListAsyncController).value?.list?.isEmpty ?? true) ? null : () {},
                         ),
                       ],
                     ),
@@ -498,32 +431,54 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            GridView.builder(
-              scrollDirection: Axis.vertical,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 36),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                mainAxisExtent: (MediaQuery.of(context).size.width - 64) * 0.5,
-              ),
-              itemBuilder: (context, index) {
-                return CustomThemeButton(
-                  onTap: () {
-                    context.push('/${HandleItRoutes.cardProfileDetail.name}');
+            ref.watch(exchangedCardAsyncController).when(
+              data: (exchangedCardsObj) {
+                return GridView.builder(
+                  scrollDirection: Axis.vertical,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 36),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    mainAxisExtent: (MediaQuery.of(context).size.width - 64) * 0.5,
+                  ),
+                  itemBuilder: (context, index) {
+                    return CustomThemeButton(
+                      onTap: () {
+                        context.push('/${HandleItRoutes.cardProfileDetail.name}');
+                      },
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: CachedNetworkImage(
+                          imageUrl: 'https://picsum.photos/id/237/200',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    );
                   },
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: CachedNetworkImage(
-                      imageUrl: 'https://picsum.photos/id/237/200',
-                      fit: BoxFit.cover,
-                    ),
+                  itemCount: exchangedCardsObj?.list?.length ?? 0,
+                );
+              },
+              error: (error, stackTrace) {
+                return const SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: Center(
+                    child: Text('Something went wrong!'),
                   ),
                 );
               },
-              itemCount: 5,
+              loading: () {
+                return const SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -537,7 +492,7 @@ class _CardActionButton extends ConsumerWidget {
 
   final String label;
   final Widget iconWidget;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -559,6 +514,62 @@ class _CardActionButton extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CreateCardButton extends ConsumerWidget {
+  const _CreateCardButton({
+    super.key,
+    required this.onTap,
+  });
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: CustomThemeButton(
+              backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+              borderRadius: 20,
+              onTap: onTap,
+              child: Container(
+                width: (MediaQuery.of(context).size.width - 48),
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.secondary,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Icon(Icons.add, color: Theme.of(context).colorScheme.background, size: 24),
+                    ).elevation(
+                      4,
+                      borderRadius: BorderRadius.circular(30),
+                      shadowColor: Theme.of(context).colorScheme.secondary,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Create My Card',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontSize: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

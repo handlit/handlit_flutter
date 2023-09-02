@@ -47,5 +47,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is required to upload profile images.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo access permission is required to upload a profile image.</string>
 </dict>
 </plist>

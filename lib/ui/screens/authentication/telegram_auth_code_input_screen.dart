@@ -150,17 +150,19 @@ class _TelegramAuthCodeInputScreenState extends ConsumerState<TelegramAuthCodeIn
                             ),
                           ),
                     const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: () {
-                        _resendCode(context);
-                      },
-                      child: Text(
-                        'Didn’t get the code?',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
+                    ref.watch(otpCodeAsyncController).isLoading
+                        ? const SizedBox.shrink()
+                        : TextButton(
+                            onPressed: () {
+                              _resendCode(context);
+                            },
+                            child: Text(
+                              'Didn’t get the code?',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
                             ),
-                      ),
-                    ),
+                          ),
                     const Spacer(),
                     NumPad(
                       isDisabled: ref.watch(otpCodeAsyncController).isLoading,

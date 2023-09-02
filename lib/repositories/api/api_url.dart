@@ -13,6 +13,8 @@ class APIUrl {
   static const MY_CARDS = 'user/card';
   // get 카드 이미지 조회 params(cardId:str) ex_ /user/card/:cardId/image
   static const CARD_IMAGE = 'user/card';
+  // get 교환한 카드 이미지 조회
+  static const EXCHANDED_CARDS = 'user/handleit';
   // post 카드 QR코드 스캔 정보 조회 body(qrData:str)
   static const CARD_QR_CODE = 'user/qr';
   // post 명함 교환, 메시지 전송 body(cardId:str, qrData:str, hiMessage:str, sendMySocialToken:str, photoList:List<String>)
