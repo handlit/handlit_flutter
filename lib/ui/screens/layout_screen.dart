@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:handlit_flutter/controllers/user_info.dart';
+import 'package:handlit_flutter/repositories/local_pref.dart';
 import 'package:handlit_flutter/repositories/scan_qr_repository.dart';
 import 'package:handlit_flutter/ui/screens/screens.dart';
 import 'package:handlit_flutter/ui/widgets/widgets.dart';
@@ -31,6 +32,8 @@ class LayoutScreen extends ConsumerStatefulWidget {
 }
 
 class _LayoutScreenState extends ConsumerState<LayoutScreen> {
+  late String? _walletAddress;
+
   Future<void> copyToClipboard(String text) async {
     await Clipboard.setData(ClipboardData(text: text));
   }
@@ -38,9 +41,10 @@ class _LayoutScreenState extends ConsumerState<LayoutScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       ref.read(userInfoAsyncController.notifier).getUserInfo();
       ref.read(layoutScreenStateProvider.notifier).state = HomeScreenState.home;
+      _walletAddress = (await ref.read(sharedPrefProvider)).getString('wallet');
     });
   }
 
@@ -98,7 +102,7 @@ class _LayoutScreenState extends ConsumerState<LayoutScreen> {
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
-                                        userInfoData?.user?.accessHash ?? '',
+                                        _walletAddress ?? '',
                                         overflow: TextOverflow.ellipsis,
                                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                               fontSize: 12,
@@ -128,7 +132,7 @@ class _LayoutScreenState extends ConsumerState<LayoutScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${(userInfoData?.user?.accessHash?.substring(0, 6)) ?? ''}...',
+                            '${_walletAddress?.substring(0, 6) ?? ''}...',
                             overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                   fontSize: 12,

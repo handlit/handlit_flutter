@@ -14,11 +14,13 @@ class WalletConnectAsyncNotifier extends StateNotifier<AsyncValue<UserTokenObj?>
   Future<void> submitWalletAddress(String walletAddress) async {
     state = const AsyncValue.loading();
     final responseObj = await ref.read(authNetworkProvider).submitWalletAddress(walletAddress);
+
     if (responseObj.error) {
       state = AsyncValue.error(CustomException(code: responseObj.errors?[0].code ?? '', message: responseObj.errorName, substring: responseObj.errors![0].message.toString()),
           StackTrace.fromString(responseObj.errors.toString()));
     } else {
       (await ref.read(sharedPrefProvider)).setString('x-user-token', responseObj.value?.userToken ?? '');
+      (await ref.read(sharedPrefProvider)).setString('wallet', walletAddress);
       state = AsyncValue.data(responseObj.value);
     }
   }
