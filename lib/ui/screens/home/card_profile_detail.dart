@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:handlit_flutter/models/exchanged_card.dart';
 import 'package:handlit_flutter/ui/screens/screens.dart';
 import 'package:handlit_flutter/ui/widgets/widgets.dart';
 
@@ -78,7 +77,7 @@ class _CardProfileDetailScreenState extends ConsumerState<CardProfileDetailScree
                         const SizedBox(height: 24),
                         const Text('Name', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                         const SizedBox(height: 8),
-                        CustomChipBox(child: Text(ref.watch(selectedCardItemObjProvider)?.name ?? '', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400))),
+                        CustomChipBox(child: Text(ref.watch(selectedCardItemObjProvider)?.name ?? '', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400))),
                         const SizedBox(height: 24),
                         const Text('E-mail', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                         const SizedBox(height: 8),

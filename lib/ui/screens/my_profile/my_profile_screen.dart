@@ -22,7 +22,7 @@ class _MyProfileScreenState extends ConsumerState<MyProfileScreen> {
         child: CustomThemeButton(
           onTap: () async {
             Future(() async {
-              (await ref.read(sharedPrefProvider)).clear();
+              await (await ref.read(sharedPrefProvider)).clear();
               Future.delayed(const Duration(milliseconds: 500));
               context.go('/');
             });
